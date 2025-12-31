@@ -1,0 +1,40 @@
+; ====== FreePBX Supervisor Monitoring Context ======
+; Paste into /etc/asterisk/extensions_custom.conf
+; Then connect it in FreePBX (see instructions below).
+;
+; Usage:
+;   Dial *55<target> where <target> is a channel name (e.g. PJSIP/1001-0000002a)
+; Variants:
+;   *551 = Listen only
+;   *552 = Whisper (to agent only)
+;   *553 = Barge (talk to both)
+;
+; Security:
+;   Keep this reachable ONLY from supervisor extensions.
+;   Consider changing the PIN and/or replacing Authenticate() with more restrictive controls.
+
+[supervisor-monitor]
+exten => _*551.,1,NoOp(Supervisor LISTEN request: ${EXTEN})
+ same => n,Authenticate(1234)
+ same => n,Set(TARGET=${EXTEN:4})
+ same => n,ChanSpy(${TARGET},q)
+ same => n,Hangup()
+
+exten => _*552.,1,NoOp(Supervisor WHISPER request: ${EXTEN})
+ same => n,Authenticate(1234)
+ same => n,Set(TARGET=${EXTEN:4})
+ same => n,ChanSpy(${TARGET},qw)
+ same => n,Hangup()
+
+exten => _*553.,1,NoOp(Supervisor BARGE request: ${EXTEN})
+ same => n,Authenticate(1234)
+ same => n,Set(TARGET=${EXTEN:4})
+ same => n,ChanSpy(${TARGET},qb)
+ same => n,Hangup()
+
+; Backward-compatible single prefix *55 = listen
+exten => _*55.,1,NoOp(Supervisor default LISTEN request: ${EXTEN})
+ same => n,Authenticate(1234)
+ same => n,Set(TARGET=${EXTEN:3})
+ same => n,ChanSpy(${TARGET},q)
+ same => n,Hangup()
